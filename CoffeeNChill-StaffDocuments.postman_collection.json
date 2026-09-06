@@ -1,0 +1,84 @@
+{
+  "info": {
+    "_postman_id": "3ec92988-aa49-45bf-bf6e-40bd853e2094",
+    "name": "CoffeeNChill-StaffDocuments",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "58008670",
+    "_collection_link": "https://go.postman.co/collection/58008670-3ec92988-aa49-45bf-bf6e-40bd853e2094?source=collection_link"
+  },
+  "item": [
+    {
+      "name": "http://localhost:7120/api/documents/upload",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "formdata",
+          "formdata": [
+            {
+              "key": "",
+              "type": "file",
+              "src": "/C:/Users/emeris/AppData/Local/Postman/app-12.17.3/ice task 3 insys.pdf"
+            }
+          ]
+        },
+        "url": {
+          "raw": "http://localhost:7120/api/documents/upload",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "7120",
+          "path": [
+            "api",
+            "documents",
+            "upload"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "http://localhost:7120/api/documents",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:7120/api/documents",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "7120",
+          "path": [
+            "api",
+            "documents"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "http://localhost:7120/api/documents/download/ice task 3 insys.pdf",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:7120/api/documents/download/ice task 3 insys.pdf",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "7120",
+          "path": [
+            "api",
+            "documents",
+            "download",
+            "ice task 3 insys.pdf"
+          ]
+        }
+      },
+      "response": []
+    }
+  ]
+}
