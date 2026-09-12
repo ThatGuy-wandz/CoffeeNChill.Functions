@@ -20,11 +20,8 @@ builder.Services.AddSingleton(sp =>
     return tableClient;
 });
 
-// Staff-docs storage.
-// Per the addendum, Azurite does not emulate Azure Files, so we use Azure Blob Storage
-// instead (which Azurite DOES emulate). This runs fully locally against Azurite —
-// no real Azure Storage Account is required.
-builder.Services.AddSingleton(sp =>
+// Staff docs storage.
+
 {
     var connectionString = Environment.GetEnvironmentVariable("AzureWebJobsStorage")
         ?? "UseDevelopmentStorage=true";

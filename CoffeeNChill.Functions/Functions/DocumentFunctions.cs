@@ -26,7 +26,7 @@ namespace CoffeeNChill.Functions.Functions
             "text/plain"
         };
 
-        private const long MaxUploadSizeBytes = 50 * 1024 * 1024; // 50 MB ceiling for a single staff document
+        private const long MaxUploadSizeBytes = 50 * 1024 * 1024; // 50 MB for a single staff document
 
         public DocumentFunctions(BlobContainerClient containerClient, ILogger<DocumentFunctions> logger)
         {
@@ -34,7 +34,7 @@ namespace CoffeeNChill.Functions.Functions
             _logger = logger;
         }
 
-        // POST /api/documents/upload -> validates MIME type, then streams the file straight into staff-docs
+        // POST /api/documents/upload will validate MIME type, then streams the file straight into staff docs
 
         [Function("UploadStaffDocument")]
         public async Task<HttpResponseData> UploadStaffDocument(
@@ -114,7 +114,7 @@ namespace CoffeeNChill.Functions.Functions
             }
         }
 
-        // GET /api/documents -> list every file in staff-docs with name, size, last modified
+        // GET /api/documents list every file in staff-docs with name, size, last modified
 
         [Function("ListStaffDocuments")]
         public async Task<HttpResponseData> ListStaffDocuments(
@@ -146,7 +146,7 @@ namespace CoffeeNChill.Functions.Functions
             return response;
         }
 
-        // GET /api/documents/download/{fileName} -> streams the file back to the client
+        //  streams the file back to the client
 
         [Function("DownloadStaffDocument")]
         public async Task<HttpResponseData> DownloadStaffDocument(
@@ -186,7 +186,7 @@ namespace CoffeeNChill.Functions.Functions
             return response;
         }
 
-        // Helpers:
+        // Helpers
 
         private static bool TryGetBoundary(HttpRequestData req, out string? boundary, out string? error)
         {
