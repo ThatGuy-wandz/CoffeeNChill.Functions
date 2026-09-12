@@ -1,7 +1,7 @@
 using System.Net;
 using Azure;
-using Azure.Storage.Files.Shares;
-using Azure.Storage.Files.Shares.Models;
+using Azure.Storage.Blobs;
+using Azure.Storage.Blobs.Models;
 using CoffeeNChill.Functions.Models;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Azure.Functions.Worker;
@@ -13,11 +13,9 @@ namespace CoffeeNChill.Functions.Functions
 {
     public class DocumentFunctions
     {
-        private readonly ShareDirectoryClient _rootDirectory;
+        private readonly BlobContainerClient _containerClient;
         private readonly ILogger<DocumentFunctions> _logger;
 
-        // Only operational documents CoffeeNChill actually hands out (recipes, manuals, policies)
-        // are accepted — anything else is rejected before it ever touches the file share.
         private static readonly HashSet<string> AllowedContentTypes = new(StringComparer.OrdinalIgnoreCase)
         {
             "application/pdf",
@@ -30,9 +28,9 @@ namespace CoffeeNChill.Functions.Functions
 
         private const long MaxUploadSizeBytes = 50 * 1024 * 1024; // 50 MB ceiling for a single staff document
 
-        public DocumentFunctions(ShareDirectoryClient rootDirectory, ILogger<DocumentFunctions> logger)
+        public DocumentFunctions(BlobContainerClient containerClient, ILogger<DocumentFunctions> logger)
         {
-            _rootDirectory = rootDirectory;
+            _containerClient = containerClient;
             _logger = logger;
         }
 
@@ -72,7 +70,7 @@ namespace CoffeeNChill.Functions.Functions
                         ? ctValues.ToString()
                         : null;
                     fileSection = section;
-                    break; // only the first file part is stored
+                    break;
                 }
 
                 if (fileSection is null || string.IsNullOrWhiteSpace(fileName))
@@ -86,20 +84,17 @@ namespace CoffeeNChill.Functions.Functions
                     $"Content type '{contentType}' is not allowed. Accepted types: {string.Join(", ", AllowedContentTypes)}.");
                 }
 
-                fileName = Path.GetFileName(fileName); // strip any path segments the client sent
-                var fileClient = _rootDirectory.GetFileClient(fileName);
+                fileName = Path.GetFileName(fileName);
+                var blobClient = _containerClient.GetBlobClient(fileName);
 
-                // True stream-based write: the multipart section body is piped directly into the
-                // Azure Files write stream in chunks — the file is never buffered in memory.
-                await using (var fileStream = await fileClient.OpenWriteAsync(
-                    overwrite: true,
-                    position: 0,
-                    options: new ShareFileOpenWriteOptions { MaxSize = MaxUploadSizeBytes }))
+                var uploadOptions = new BlobUploadOptions
                 {
-                    await fileSection.Body.CopyToAsync(fileStream);
-                }
+                    HttpHeaders = new BlobHttpHeaders { ContentType = contentType }
+                };
 
-                var properties = await fileClient.GetPropertiesAsync();
+                await blobClient.UploadAsync(fileSection.Body, uploadOptions);
+
+                var properties = await blobClient.GetPropertiesAsync();
                 _logger.LogInformation("Staff document {FileName} uploaded ({SizeBytes} bytes).",
                 fileName, properties.Value.ContentLength);
 
@@ -114,7 +109,7 @@ namespace CoffeeNChill.Functions.Functions
             }
             catch (RequestFailedException ex)
             {
-                _logger.LogError(ex, "Azure Files error while uploading staff document.");
+                _logger.LogError(ex, "Azure Blob Storage error while uploading staff document.");
                 return await Error(req, HttpStatusCode.InternalServerError, "Failed to upload the document.");
             }
         }
@@ -130,24 +125,19 @@ namespace CoffeeNChill.Functions.Functions
 
             try
             {
-                await foreach (var item in _rootDirectory.GetFilesAndDirectoriesAsync())
+                await foreach (var blobItem in _containerClient.GetBlobsAsync())
                 {
-                    if (item.IsDirectory) continue;
-
-                    var fileClient = _rootDirectory.GetFileClient(item.Name);
-                    var props = await fileClient.GetPropertiesAsync();
-
                     items.Add(new StaffDocumentDto
                     {
-                        FileName = item.Name,
-                        SizeBytes = props.Value.ContentLength,
-                        LastModified = props.Value.LastModified
+                        FileName = blobItem.Name,
+                        SizeBytes = blobItem.Properties.ContentLength ?? 0,
+                        LastModified = blobItem.Properties.LastModified
                     });
                 }
             }
             catch (RequestFailedException ex)
             {
-                _logger.LogError(ex, "Azure Files error while listing staff documents.");
+                _logger.LogError(ex, "Azure Blob Storage error while listing staff documents.");
                 return await Error(req, HttpStatusCode.InternalServerError, "Failed to list staff documents.");
             }
 
@@ -168,15 +158,15 @@ namespace CoffeeNChill.Functions.Functions
             if (string.IsNullOrWhiteSpace(fileName))
                 return await Error(req, HttpStatusCode.BadRequest, "File name route parameter is required.");
 
-            var fileClient = _rootDirectory.GetFileClient(fileName);
-            ShareFileDownloadInfo download;
+            var blobClient = _containerClient.GetBlobClient(fileName);
+            BlobDownloadInfo download;
 
             try
             {
-                if (!await fileClient.ExistsAsync())
+                if (!await blobClient.ExistsAsync())
                     return await Error(req, HttpStatusCode.NotFound, $"Document '{fileName}' was not found.");
 
-                download = await fileClient.DownloadAsync();
+                download = await blobClient.DownloadAsync();
             }
             catch (RequestFailedException ex) when (ex.Status == (int)HttpStatusCode.NotFound)
             {
@@ -184,7 +174,7 @@ namespace CoffeeNChill.Functions.Functions
             }
             catch (RequestFailedException ex)
             {
-                _logger.LogError(ex, "Azure Files error while downloading staff document.");
+                _logger.LogError(ex, "Azure Blob Storage error while downloading staff document.");
                 return await Error(req, HttpStatusCode.InternalServerError, "Failed to download the document.");
             }
 

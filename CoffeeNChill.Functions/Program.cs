@@ -1,5 +1,5 @@
 using Azure.Data.Tables;
-using Azure.Storage.Files.Shares;
+using Azure.Storage.Blobs;
 using Microsoft.Azure.Functions.Worker.Builder;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -20,21 +20,20 @@ builder.Services.AddSingleton(sp =>
     return tableClient;
 });
 
-// Added for Azure Files integration (staff-docs).
-// Azurite does not emulate the Azure Files service, so this must point at a
-// real Storage Account connection string set in local.settings.json as
-// "StaffDocsStorage" — it cannot fall back to "UseDevelopmentStorage=true".
+// Staff-docs storage.
+// Per the addendum, Azurite does not emulate Azure Files, so we use Azure Blob Storage
+// instead (which Azurite DOES emulate). This runs fully locally against Azurite —
+// no real Azure Storage Account is required.
 builder.Services.AddSingleton(sp =>
 {
-    var connectionString = Environment.GetEnvironmentVariable("StaffDocsStorage")
-        ?? throw new InvalidOperationException(
-        "StaffDocsStorage connection string is not set. Add it to local.settings.json " +
-        "(Azurite does not support Azure File Shares, so this must point at a real Storage Account).");
+    var connectionString = Environment.GetEnvironmentVariable("AzureWebJobsStorage")
+        ?? "UseDevelopmentStorage=true";
 
-    var shareClient = new ShareClient(connectionString, "staff-docs");
-    shareClient.CreateIfNotExists();
+    var blobServiceClient = new BlobServiceClient(connectionString);
+    var containerClient = blobServiceClient.GetBlobContainerClient("staff-docs");
+    containerClient.CreateIfNotExists();
 
-    return shareClient.GetRootDirectoryClient();
+    return containerClient;
 });
 
 builder.Build().Run();
