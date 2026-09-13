@@ -31,6 +31,7 @@ docker run -d --name functions --network coffeenchill-net -p 7120:80 -e AzureWeb
 ## Team Contributions
 - [Asande Ngubane]: Standalone Dockerfile, Docker Hub image publishing (Functions + Azurite), container-to-Azurite networking setup, Postman collection creation and endpoint testing
 - [ThatGuy-wandz]: [ask them what they worked on]
+- [Tristyn ST10468574] : Azure Tables and HTTP Functions ( Menu management ) 
 - [emeris]: [ask them what they worked on]
 
 ## Demo Video
