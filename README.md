@@ -37,7 +37,7 @@ Implemented the staff-docs Azure File Share integration, including:
 	•	Built ListStaffDocuments (GET /api/documents) — returns file name, size, and last modified date for all stored documents
 	•	Built DownloadStaffDocument (GET /api/documents/download/{fileName}) — streams a requested file back to the client, with 404 handling for missing files
 - [Tristyn ST10468574] : Azure Tables and HTTP Functions ( Menu management ) 
-- [emeris]: [ask them what they worked on]
+  
 
 ## Demo Video
 [YouTube link — add once recorded]
