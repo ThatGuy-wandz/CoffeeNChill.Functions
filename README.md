@@ -39,5 +39,4 @@ Implemented the staff-docs Azure File Share integration, including:
 - [Tristyn ST10468574] : Azure Tables and HTTP Functions ( Menu management ) 
   
 
-## Demo Video
-[YouTube link — add once recorded]
+
