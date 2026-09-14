@@ -30,7 +30,12 @@ docker run -d --name functions --network coffeenchill-net -p 7120:80 -e AzureWeb
 
 ## Team Contributions
 - [Asande Ngubane]: Standalone Dockerfile, Docker Hub image publishing (Functions + Azurite), container-to-Azurite networking setup, Postman collection creation and endpoint testing
-- [ThatGuy-wandz]: [ask them what they worked on]
+- [ThatGuy-wandz]:Azure Files Integration (Staff Documents)
+Implemented the staff-docs Azure File Share integration, including:
+	•	Registered a ShareDirectoryClient in Program.cs, creating the staff-docs share on startup
+	•	Built UploadStaffDocument (POST /api/documents/upload) — parses multipart/form-data and streams files into the file share
+	•	Built ListStaffDocuments (GET /api/documents) — returns file name, size, and last modified date for all stored documents
+	•	Built DownloadStaffDocument (GET /api/documents/download/{fileName}) — streams a requested file back to the client, with 404 handling for missing files
 - [Tristyn ST10468574] : Azure Tables and HTTP Functions ( Menu management ) 
 - [emeris]: [ask them what they worked on]
 
