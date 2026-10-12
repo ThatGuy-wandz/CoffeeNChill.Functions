@@ -77,7 +77,19 @@ Add `-v` to also delete the stored Azurite data.
 
 The Postman collections in the repo can be used for these tests.
 
-
+Contributer Part 2
+ST10485223 Lihlithemba Sithole:
+"Azure Storage Queue
+Placement (Order
+Producer)
+order-processing-
+queue setup
+Queue producer
+endpoint/logic
+JSON payload
+serialization
+Validation of order
+fields"
 
 
 
