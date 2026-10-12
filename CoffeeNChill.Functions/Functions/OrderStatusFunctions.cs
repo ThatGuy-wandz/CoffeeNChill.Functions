@@ -10,7 +10,7 @@ using Microsoft.Azure.Functions.Worker.Http;
 using Microsoft.Extensions.Logging;
 namespace CoffeeNChill.Functions.Functions
 {
-    // Read-only endpoints so Postman (and the video) can SEE what ProcessOrderQueue did,
+    
     // plus one demo endpoint that deliberately sends a bad message to prove poison handling.
     public class OrderStatusFunctions
     {
@@ -67,7 +67,7 @@ Route = "orders/status/{orderId}")] HttpRequestData req,
                 new { error = "The Orders table is currently unavailable. Try again shortly." });
             }
         }
-        // GET /api/orders/status?date=2026-10-12&status=Ready -> list orders (filters optional)
+       
         [Function("GetAllOrders")]
         public async Task<HttpResponseData> GetAllOrders(
         [HttpTrigger(AuthorizationLevel.Anonymous, "get",
