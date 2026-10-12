@@ -33,9 +33,9 @@ builder.Services.AddSingleton(sp =>
     return containerClient;
 });
 
-// Order queue producer.
-// Messages are Base64-encoded because the Functions queue trigger expects Base64 by default.
-// Retries are kept short so a missing Azurite fails fast instead of hanging the request.
+// Order queue producer
+// Messages are Base64 encoded because the Functions queue trigger expects Base64 by default
+// Retries are kept short so a missing Azurite fails fast instead of hanging the request
 builder.Services.AddSingleton(sp =>
 {
     var connectionString = Environment.GetEnvironmentVariable("AzureWebJobsStorage")
