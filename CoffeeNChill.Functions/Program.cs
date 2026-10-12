@@ -73,4 +73,4 @@ var startupConnection = Environment.GetEnvironmentVariable("AzureWebJobsStorage"
     ?? "UseDevelopmentStorage=true";
 new QueueClient(startupConnection, "order-processing-queue").CreateIfNotExists();
 
-builder.Build().Run();
+builder.Build().Run(); 
