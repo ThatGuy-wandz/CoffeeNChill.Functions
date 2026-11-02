@@ -8,20 +8,27 @@ using Microsoft.Azure.Functions.Worker;
 using Microsoft.Extensions.Logging;
 namespace CoffeeNChill.Functions.Functions
 {
+    // AI USE DISCLOSURE: Claude (Anthropic) was used to help review, debug and improve this
+    // function (dependency injection fix, failure logging). I tested it myself against
+    // Azurite and I can explain every part of it. Sources are listed in the README.
+    //
     // Background function: fires automatically whenever a message lands on
     // order-processing-queue (placed there by the PlaceOrder producer endpoint).
     //
     // 1. Parses and validates the JSON payload into an Order
     // 2. Creates a row in the Orders table with Status = "Received"
     // 3. Walks the order through Received -> Preparing -> Ready -> Collected
-    // 4. If anything fails the exception is rethrown, so the Functions host retries
-    // the message and finally moves it to "order-processing-queue-poison"
-    // (maxDequeueCount is set in host.json).
+    // 4. If anything fails the exception is rethrown. The Functions host then retries the
+    // message and, after maxDequeueCount attempts (3, set in host.json), moves it to
+    // "order-processing-queue-poison" (Microsoft, n.d.).
+    // 5. On the LAST attempt the reason for the failure is saved to the FailedOrders table
+    // so it can be read later through GET /api/orders/failed.
     public class ProcessOrderQueueFunction
     {
         private const string OrdersTableName = "Orders";
         private const int DefaultStepDelaySeconds = 5;
-        private const int MaxDequeueCount = 3; // keep in sync with host.json
+        private const int MaxDequeueCount = 3; // must match "maxDequeueCount" in host.json
+        private readonly TableServiceClient _tableServiceClient;
         private readonly TableClient _ordersTable;
         private readonly ILogger<ProcessOrderQueueFunction> _logger;
         private static readonly JsonSerializerOptions JsonOptions =
@@ -30,15 +37,15 @@ namespace CoffeeNChill.Functions.Functions
         TableServiceClient tableServiceClient,
         ILogger<ProcessOrderQueueFunction> logger)
         {
+            _tableServiceClient = tableServiceClient;
             _ordersTable = tableServiceClient.GetTableClient(OrdersTableName);
             _logger = logger;
         }
         [Function("ProcessOrderQueue")]
         public async Task Run(
         [QueueTrigger("order-processing-queue", Connection = "AzureWebJobsStorage")]
-
-        QueueMessage message,
-CancellationToken cancellationToken)
+QueueMessage message,
+        CancellationToken cancellationToken)
         {
             _logger.LogInformation(
             "ProcessOrderQueue triggered. MessageId={MessageId}, attempt {Attempt} of {Max}.",
@@ -55,26 +62,58 @@ CancellationToken cancellationToken)
             }
             catch (InvalidOrderMessageException ex)
             {
-                // The message itself is bad (not valid JSON / missing fields), so retrying
-                // will not help. Rethrow anyway: after MaxDequeueCount attempts the host
-                // moves it to the poison queue.
+                // The message itself is bad (not valid JSON / missing fields). Retrying will
+                // not fix it, but we rethrow so the host counts the attempt and finally
+                // moves the message to the poison queue.
                 _logger.LogError(ex,
-                "Invalid order message {MessageId} (attempt {Attempt} of {Max}). Reason: {Reason}. " +
-                "It will be moved to 'order-processing-queue-poison' after the final attempt.",
+                "Invalid order message {MessageId} (attempt {Attempt} of {Max}). Reason: {Reason}.",
                 message.MessageId, message.DequeueCount, MaxDequeueCount, ex.Message);
+                await HandleFinalAttemptAsync(message, ex, cancellationToken);
                 throw;
             }
             catch (Exception ex)
             {
                 // Temporary failure (e.g. Azurite unreachable): rethrow so it is retried.
                 _logger.LogError(ex,
-                "Failed to process message {MessageId} (attempt {Attempt} of {Max}). " +
-                "It will be retried and then moved to 'order-processing-queue-poison'.",
+                "Failed to process message {MessageId} (attempt {Attempt} of {Max}).",
                 message.MessageId, message.DequeueCount, MaxDequeueCount);
+                await HandleFinalAttemptAsync(message, ex, cancellationToken);
                 throw;
             }
         }
-
+        // If this was the last attempt, the host will move the message to the poison queue
+        // as soon as we rethrow. Log that clearly and save the reason first.
+        private async Task HandleFinalAttemptAsync(
+        QueueMessage message, Exception ex, CancellationToken cancellationToken)
+        {
+            if (message.DequeueCount < MaxDequeueCount) return;
+            _logger.LogCritical(
+            "Message {MessageId} failed all {Max} attempts and is being moved to " +
+            "'order-processing-queue-poison'. Final reason: {Reason}",
+            message.MessageId, MaxDequeueCount, ex.Message);
+            try
+            {
+                var failedTable = _tableServiceClient.GetTableClient(FailedOrderEntity.TableName);
+                await failedTable.CreateIfNotExistsAsync(cancellationToken);
+                var failed = new FailedOrderEntity
+                {
+                    PartitionKey = DateTime.UtcNow.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture),
+                    RowKey = message.MessageId,
+                    Reason = ex.Message,
+                    ExceptionType = ex.GetType().Name,
+                    RawMessage = Truncate(message.MessageText, 2000),
+                    DequeueCount = message.DequeueCount,
+                    FailedAt = DateTimeOffset.UtcNow
+                };
+                await failedTable.UpsertEntityAsync(failed, TableUpdateMode.Replace, cancellationToken);
+            }
+            catch (Exception logEx)
+            {
+                // Never hide the original failure because the failure log itself failed.
+                _logger.LogError(logEx, "Could not save message {MessageId} to FailedOrders.",
+                message.MessageId);
+            }
+        }
         // Turns the queue JSON into a validated Order, or throws InvalidOrderMessageException.
         private static Order ParseOrder(string messageText)
         {
@@ -131,14 +170,13 @@ CancellationToken cancellationToken)
             catch (RequestFailedException ex) when (ex.Status == 409)
             {
                 _logger.LogWarning(
-                "Order {OrderId} already exists in Orders table. Resuming its lifecycle.",
-                entity.RowKey);
+"Order {OrderId} already exists in Orders table. Resuming its lifecycle.",
+entity.RowKey);
                 var existing = await _ordersTable.GetEntityAsync<OrderEntity>(
                 entity.PartitionKey, entity.RowKey, cancellationToken: cancellationToken);
                 return existing.Value;
             }
         }
-
         // Simulates the barista: Received -> Preparing -> Ready -> Collected,
         // saving each new status to the Orders table after a short delay.
         private async Task AdvanceLifecycleAsync(
@@ -170,6 +208,10 @@ CancellationToken cancellationToken)
             ? DateTime.SpecifyKind(value, DateTimeKind.Utc)
             : value.ToUniversalTime();
         }
+        private static string Truncate(string? value, int maxLength) =>
+        string.IsNullOrEmpty(value) || value.Length <= maxLength
+        ? value ?? string.Empty
+        : value[..maxLength];
         // Azure Table keys may not contain / \ # ? or control characters.
         private static bool HasInvalidKeyCharacters(string value) =>
         value.Any(c => c is '/' or '\\' or '#' or '?' || char.IsControl(c));
@@ -179,7 +221,6 @@ CancellationToken cancellationToken)
     {
         public InvalidOrderMessageException(string message) : base(message) { }
         public InvalidOrderMessageException(string message, Exception inner)
-
-            : base(message, inner) { }
+        : base(message, inner) { }
     }
 }
