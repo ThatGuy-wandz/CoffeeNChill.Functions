@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <!-- Writes CoffeeNChill.Gateway.xml so Swagger can show our /// comments -->
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <!-- 1591 = "missing XML comment" warning; we document the public API, not every member -->
+    <NoWarn>$(NoWarn);1591</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Same versions as the Functions project -->
+    <PackageReference Include="Azure.Data.Tables" Version="12.11.0" />
+    <PackageReference Include="Azure.Storage.Blobs" Version="12.27.0" />
+    <PackageReference Include="Swashbuckle.AspNetCore" Version="10.3.1" />
+    <!-- Swashbuckle.AspNetCore is added in Step 3 with Install-Package -->
+  </ItemGroup>
+
+</Project>
