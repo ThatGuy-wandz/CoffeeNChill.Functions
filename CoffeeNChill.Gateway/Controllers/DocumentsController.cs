@@ -3,14 +3,14 @@ using CoffeeNChill.Gateway.Dtos;
 using CoffeeNChill.Gateway.Exceptions;
 using CoffeeNChill.Gateway.Mapping;
 using CoffeeNChill.Gateway.Services;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 
 namespace CoffeeNChill.Gateway.Controllers;
 
 /// <summary>
 /// Staff operational documents (recipes, cleaning manuals, policies) kept in the
-/// staff-docs file share. Staff only once JWT is switched on.
+/// staff-docs file share. Staff only: every endpoint needs an Admin or Staff token.
 /// </summary>
 [ApiController]
 [Route("api/documents")]
@@ -32,9 +32,13 @@ public class DocumentsController : ControllerBase
 
     /// <summary>List all staff documents.</summary>
     /// <response code="200">File name, size and last modified date of each document.</response>
-    // JWT SECTION: add [Authorize(Roles = "Admin,Staff")] here.
+    /// <response code="401">No token, or the token is invalid or expired.</response>
+    /// <response code="403">The user's role is not allowed to do this.</response>
+    [Authorize(Roles = "Admin,Staff")]
     [HttpGet]
     [ProducesResponseType(typeof(List<StaffDocumentResponse>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status403Forbidden)]
     public async Task<ActionResult<List<StaffDocumentResponse>>> List(CancellationToken ct)
     {
         var documents = await _functions.ListDocumentsAsync(ct);
@@ -49,13 +53,17 @@ public class DocumentsController : ControllerBase
     /// <param name="request">The form containing the file.</param>
     /// <response code="201">The document was stored.</response>
     /// <response code="400">No file was sent, or it was empty.</response>
+    /// <response code="401">No token, or the token is invalid or expired.</response>
+    /// <response code="403">The user's role is not allowed to do this.</response>
     /// <response code="415">The file type is not allowed.</response>
-    // JWT SECTION: add [Authorize(Roles = "Admin,Staff")] here.
+    [Authorize(Roles = "Admin,Staff")]
     [HttpPost("upload")]
     [Consumes("multipart/form-data")]
     [RequestSizeLimit(MaxUploadBytes)]
     [ProducesResponseType(typeof(DocumentUploadResponse), StatusCodes.Status201Created)]
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status403Forbidden)]
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status415UnsupportedMediaType)]
     public async Task<ActionResult<DocumentUploadResponse>> Upload(
         [FromForm] UploadDocumentRequest request, CancellationToken ct)
@@ -81,11 +89,15 @@ public class DocumentsController : ControllerBase
     /// <summary>Download a staff document.</summary>
     /// <param name="fileName">Exact file name, for example cleaning-manual.pdf.</param>
     /// <response code="200">The file contents.</response>
+    /// <response code="401">No token, or the token is invalid or expired.</response>
+    /// <response code="403">The user's role is not allowed to do this.</response>
     /// <response code="404">The document does not exist.</response>
-    // JWT SECTION: add [Authorize(Roles = "Admin,Staff")] here.
+    [Authorize(Roles = "Admin,Staff")]
     [HttpGet("download/{fileName}")]
     [Produces("application/octet-stream")]
     [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status403Forbidden)]
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
     public async Task<IActionResult> Download(string fileName, CancellationToken ct)
     {
@@ -97,10 +109,14 @@ public class DocumentsController : ControllerBase
     /// <remarks>Deletes straight from the staff-docs container.</remarks>
     /// <param name="fileName">Exact file name to delete.</param>
     /// <response code="204">The document was deleted.</response>
+    /// <response code="401">No token, or the token is invalid or expired.</response>
+    /// <response code="403">The user's role is not allowed to do this.</response>
     /// <response code="404">The document does not exist.</response>
-    // JWT SECTION: add [Authorize(Roles = "Admin,Staff")] here.
+    [Authorize(Roles = "Admin,Staff")]
     [HttpDelete("{fileName}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status403Forbidden)]
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
     public async Task<IActionResult> Delete(string fileName, CancellationToken ct)
     {

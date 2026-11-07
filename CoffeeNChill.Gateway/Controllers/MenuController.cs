@@ -2,8 +2,8 @@ using CoffeeNChill.Gateway.Dtos;
 using CoffeeNChill.Gateway.Exceptions;
 using CoffeeNChill.Gateway.Mapping;
 using CoffeeNChill.Gateway.Services;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 
 namespace CoffeeNChill.Gateway.Controllers;
 
@@ -25,7 +25,7 @@ public class MenuController : ControllerBase
     /// <summary>Get the whole menu.</summary>
     /// <remarks>Public: students can view the menu without logging in.</remarks>
     /// <response code="200">All menu items (an empty list if the menu is empty).</response>
-    // JWT SECTION: this endpoint stays public, so add [AllowAnonymous] here.
+    [AllowAnonymous]
     [HttpGet]
     [ProducesResponseType(typeof(List<MenuItemResponse>), StatusCodes.Status200OK)]
     public async Task<ActionResult<List<MenuItemResponse>>> GetAll(CancellationToken ct)
@@ -35,9 +35,11 @@ public class MenuController : ControllerBase
     }
 
     /// <summary>Get the menu items in one category.</summary>
+    /// <remarks>Public: students can view the menu without logging in.</remarks>
     /// <param name="category">Category name, for example "Hot Drinks".</param>
     /// <response code="200">The items in that category.</response>
     /// <response code="404">No items exist in that category.</response>
+    [AllowAnonymous]
     [HttpGet("category/{category}")]
     [ProducesResponseType(typeof(List<MenuItemResponse>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
@@ -48,15 +50,19 @@ public class MenuController : ControllerBase
     }
 
     /// <summary>Add a new item to the menu.</summary>
-    /// <remarks>Staff only once JWT is switched on (Admin or Staff role).</remarks>
+    /// <remarks>Staff only (Admin or Staff role).</remarks>
     /// <param name="request">The item to add.</param>
     /// <response code="201">The item was created.</response>
     /// <response code="400">The body is missing a required field or has an invalid value.</response>
+    /// <response code="401">No token, or the token is invalid or expired.</response>
+    /// <response code="403">The user's role is not allowed to do this.</response>
     /// <response code="409">An item with that SKU already exists in the category.</response>
-    // JWT SECTION: add [Authorize(Roles = "Admin,Staff")] here.
+    [Authorize(Roles = "Admin,Staff")]
     [HttpPost]
     [ProducesResponseType(typeof(MenuItemResponse), StatusCodes.Status201Created)]
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status403Forbidden)]
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status409Conflict)]
     public async Task<ActionResult<MenuItemResponse>> Create(
         [FromBody] CreateMenuItemRequest request, CancellationToken ct)
@@ -66,17 +72,21 @@ public class MenuController : ControllerBase
     }
 
     /// <summary>Change the price and/or availability of an item.</summary>
-    /// <remarks>Staff only once JWT is switched on (Admin or Staff role).</remarks>
+    /// <remarks>Staff only (Admin or Staff role).</remarks>
     /// <param name="category">Category of the item.</param>
     /// <param name="id">SKU of the item.</param>
     /// <param name="request">The new price and/or availability.</param>
     /// <response code="200">The updated item.</response>
     /// <response code="400">Neither field was supplied, or a value is invalid.</response>
+    /// <response code="401">No token, or the token is invalid or expired.</response>
+    /// <response code="403">The user's role is not allowed to do this.</response>
     /// <response code="404">The item does not exist.</response>
-    // JWT SECTION: add [Authorize(Roles = "Admin,Staff")] here.
+    [Authorize(Roles = "Admin,Staff")]
     [HttpPut("{category}/{id}")]
     [ProducesResponseType(typeof(MenuItemResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status403Forbidden)]
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
     public async Task<ActionResult<MenuItemResponse>> Update(
         string category, string id, [FromBody] UpdateMenuItemRequest request, CancellationToken ct)
@@ -92,14 +102,18 @@ public class MenuController : ControllerBase
     }
 
     /// <summary>Remove an item from the menu.</summary>
-    /// <remarks>Staff only once JWT is switched on (Admin or Staff role).</remarks>
+    /// <remarks>Staff only (Admin or Staff role).</remarks>
     /// <param name="category">Category of the item.</param>
     /// <param name="id">SKU of the item.</param>
     /// <response code="204">The item was deleted.</response>
+    /// <response code="401">No token, or the token is invalid or expired.</response>
+    /// <response code="403">The user's role is not allowed to do this.</response>
     /// <response code="404">The item does not exist.</response>
-    // JWT SECTION: add [Authorize(Roles = "Admin,Staff")] here.
+    [Authorize(Roles = "Admin,Staff")]
     [HttpDelete("{category}/{id}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status403Forbidden)]
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
     public async Task<IActionResult> Delete(string category, string id, CancellationToken ct)
     {
