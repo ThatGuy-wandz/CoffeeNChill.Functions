@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk.Web">
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
@@ -8,6 +8,7 @@
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <!-- 1591 = "missing XML comment" warning; we document the public API, not every member -->
     <NoWarn>$(NoWarn);1591</NoWarn>
+    <UserSecretsId>b23d6775-ccf6-48e0-b0cb-c144766bea93</UserSecretsId>
   </PropertyGroup>
 
   <ItemGroup>
