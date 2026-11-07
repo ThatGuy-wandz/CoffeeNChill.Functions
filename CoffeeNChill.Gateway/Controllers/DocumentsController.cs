@@ -4,6 +4,7 @@ using CoffeeNChill.Gateway.Exceptions;
 using CoffeeNChill.Gateway.Mapping;
 using CoffeeNChill.Gateway.Services;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 
 namespace CoffeeNChill.Gateway.Controllers;
 
