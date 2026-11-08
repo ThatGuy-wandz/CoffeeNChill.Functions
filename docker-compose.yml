@@ -1,4 +1,4 @@
-services:
+ services:
   azurite:
     image: modestsnake/coffeenchill-azurite:v1.0
     container_name: azurite
@@ -7,9 +7,10 @@ services:
       --blobHost 0.0.0.0 --queueHost 0.0.0.0 --tableHost 0.0.0.0
       --skipApiVersionCheck
     ports:
-      - "10000:10000"
-      - "10001:10001"
-      - "10002:10002"
+      # Bound to localhost only, so they are NOT reachable from the internet on the VPS
+      - "127.0.0.1:10000:10000"
+      - "127.0.0.1:10001:10001"
+      - "127.0.0.1:10002:10002"
     volumes:
       - azurite-data:/data
     networks:
@@ -19,6 +20,7 @@ services:
       interval: 5s
       timeout: 3s
       retries: 10
+    restart: unless-stopped
 
   functions:
     image: st10477821/coffeenchill-functions:v2.0
@@ -27,13 +29,40 @@ services:
       azurite:
         condition: service_healthy
     ports:
-      - "7120:80"
+      # Localhost only: the Functions have no authentication, so the public must go through the gateway
+      - "127.0.0.1:7120:80"
     environment:
       AzureWebJobsStorage: "DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==;BlobEndpoint=http://azurite:10000/devstoreaccount1;QueueEndpoint=http://azurite:10001/devstoreaccount1;TableEndpoint=http://azurite:10002/devstoreaccount1;"
       FUNCTIONS_WORKER_RUNTIME: dotnet-isolated
     networks:
       - coffeenchill-net
-    restart: on-failure
+    restart: unless-stopped
+
+  gateway:
+    image: st10477821/coffeenchill-gateway:v3.0
+    container_name: gateway
+    depends_on:
+      azurite:
+        condition: service_healthy
+      functions:
+        condition: service_started
+    ports:
+      # The only public entry point: http://<server-ip>:5000/swagger
+      - "5000:8080"
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      FunctionsApi__BaseUrl: "http://functions/api/"
+      Storage__ConnectionString: "DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==;BlobEndpoint=http://azurite:10000/devstoreaccount1;QueueEndpoint=http://azurite:10001/devstoreaccount1;TableEndpoint=http://azurite:10002/devstoreaccount1;"
+      Jwt__Key: "${JWT_KEY:?Set JWT_KEY in the .env file (at least 32 characters)}"
+      Seed__Admin__Username: "${ADMIN_USERNAME}"
+      Seed__Admin__Email: "${ADMIN_EMAIL}"
+      Seed__Admin__Password: "${ADMIN_PASSWORD}"
+      Seed__Staff__Username: "${STAFF_USERNAME}"
+      Seed__Staff__Email: "${STAFF_EMAIL}"
+      Seed__Staff__Password: "${STAFF_PASSWORD}"
+    networks:
+      - coffeenchill-net
+    restart: unless-stopped
 
 networks:
   coffeenchill-net:
