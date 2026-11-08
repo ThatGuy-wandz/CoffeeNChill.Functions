@@ -92,4 +92,41 @@ Validation of order
 fields"
 
 
+ Part 3: Live VPS Deployment
+
+**Live URL:** http://172.209.216.242:5000/swagger
+**Host:** Azure VM (Ubuntu 24.04 LTS), Docker Engine and Docker Compose
+**Video walkthrough:** [paste your unlisted YouTube link here]
+
+ Architecture
+```mermaid
+flowchart LR
+  C[Client: Swagger / Postman] -->|HTTP :5000| G[Gateway :8080]
+  G |http://functions/api| F[Azure Functions :80]
+  G |Users table, documents| A[(Azurite)]
+  F|Orders, menu, queues| A
+```
+Only port 5000 the gateway is public. Azurite and the Functions are bound to localhost.
+
+ Docker Hub images
+- `st10477821/coffeenchill-gateway:v3.0`
+- `st10477821/coffeenchill-functions:v2.0`
+- `modestsnake/coffeenchill-azurite:v1.0`
+
+ Deploy on a server
+1. Install Docker Engine and Docker Compose.
+2. Copy `docker-compose.yml` and `.env.example` to the server, then `cp .env.example .env`.
+3. Edit `.env`: set `JWT_KEY` (32+ characters) and the admin and staff passwords.
+4. Run `docker compose up -d`.
+5. Open `http://172.209.216.242:5000/swagger`.
+
+The  Roles
+- Public: `GET /api/menu`, `POST /api/orders/queue`, register and login.
+- Admin or Staff: menu changes, documents, order status updates.
+
+Some  known limitations
+- The site runs over plain HTTP (no domain or TLS certificate).
+- Azurite stands in for Azure Storage on the server.
+- Secrets are kept in a `.env` file that is not committed. Test credentials are shown in the video, not stored in the repo.
+
 
