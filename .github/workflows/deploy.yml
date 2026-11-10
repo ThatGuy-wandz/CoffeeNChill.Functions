@@ -24,12 +24,12 @@ jobs:
 
       - name: Restore and build
         run: |
-          dotnet restore CoffeeNChill.Functions.slnx
-          dotnet build CoffeeNChill.Functions.slnx --no-restore -c Release
+          dotnet build CoffeeNChill.Gateway/CoffeeNChill.Gateway.csproj -c Release -v minimal
+          dotnet build CoffeeNChill.Functions/CoffeeNChill.Functions.csproj -c Release -v minimal
 
       - name: Run unit tests
         if: ${{ hashFiles('**/*Tests.csproj') != '' }}
-        run: dotnet test CoffeeNChill.Functions.slnx --no-build -c Release
+        run: dotnet test "$(find . -name '*Tests.csproj' | head -n 1)" -c Release
 
   docker:
     needs: build-test
