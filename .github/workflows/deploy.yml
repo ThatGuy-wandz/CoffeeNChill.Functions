@@ -1,16 +1,3 @@
-name: CI/CD - Build, test, publish and deploy
-
-on:
-  push:
-    branches: [main, master]
-  workflow_dispatch:
-
-env:
-  VERSION: v1.${{ github.run_number }}
-  FUNCTIONS_IMAGE: coffeenchill-functions
-  GATEWAY_IMAGE: coffeenchill-gateway
-
-jobs:
   test:
     name: Build and unit tests
     runs-on: ubuntu-latest
@@ -18,65 +5,30 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Set up .NET SDK
+      - name: Set up .NET SDK 10
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: 10.0.x
+          
+      - name: Set up .NET SDK 8
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
 
-      - name: Restore Solution
-        run: dotnet restore CoffeeNChill.Functions.slnx
+      - name: Restore Gateway
+        run: dotnet restore CoffeeNChill.Gateway/CoffeeNChill.Gateway.csproj
 
-      - name: Build Solution
-        run: dotnet build CoffeeNChill.Functions.slnx --configuration Release --no-restore
+      - name: Restore Functions
+        run: dotnet restore CoffeeNChill.Functions/CoffeeNChill.Functions.csproj
+
+      - name: Restore Tests
+        run: dotnet restore CoffeeNChill.Gateway.Tests/CoffeeNChill.Gateway.Tests.csproj
+
+      - name: Build Gateway
+        run: dotnet build CoffeeNChill.Gateway/CoffeeNChill.Gateway.csproj --configuration Release --no-restore
+
+      - name: Build Functions
+        run: dotnet build CoffeeNChill.Functions/CoffeeNChill.Functions.csproj --configuration Release --no-restore
 
       - name: Run unit tests
         run: dotnet test CoffeeNChill.Gateway.Tests/CoffeeNChill.Gateway.Tests.csproj --configuration Release --no-restore --verbosity normal
-
-  docker:
-    name: Build and push Docker images
-    needs: test
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      - name: Log in to Docker Hub
-        uses: docker/login-action@v3
-        with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
-
-      - name: Build and push Functions image
-        uses: docker/build-push-action@v6
-        with:
-          context: ./CoffeeNChill.Functions
-          file: ./CoffeeNChill.Functions/Dockerfile
-          push: true
-          tags: |
-            ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.FUNCTIONS_IMAGE }}:${{ env.VERSION }}
-            ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.FUNCTIONS_IMAGE }}:latest
-
-      - name: Build and push Gateway image
-        uses: docker/build-push-action@v6
-        with:
-          context: ./CoffeeNChill.Gateway
-          file: ./CoffeeNChill.Gateway/Dockerfile
-          push: true
-          tags: |
-            ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.GATEWAY_IMAGE }}:${{ env.VERSION }}
-            ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.GATEWAY_IMAGE }}:latest
-
-  deploy:
-    name: Deploy to Render
-    needs: docker
-    runs-on: ubuntu-latest
-    steps:
-      - name: Trigger Render deploy - Gateway
-        run: |
-          curl -fsS -X POST "${{ secrets.RENDER_DEPLOY_HOOK_GATEWAY }}"
-      - name: Trigger Render deploy - Functions
-        run: |
-          curl -fsS -X POST "${{ secrets.RENDER_DEPLOY_HOOK_FUNCTIONS }}"
