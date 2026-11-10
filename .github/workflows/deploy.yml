@@ -21,7 +21,7 @@ jobs:
       - name: Set up .NET SDK 10
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: 10.0.x
+          dotnet-version: 10.0.1xx
 
       - name: Show .NET info
         run: dotnet --info
