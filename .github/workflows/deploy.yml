@@ -22,11 +22,10 @@ jobs:
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: 10.0.x
-          
-      - name: Set up .NET SDK 8
-        uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: 8.0.x
+
+                - name: Show .NET info
+        run: dotnet --info
+     
 
       - name: Restore Gateway
         run: dotnet restore CoffeeNChill.Gateway/CoffeeNChill.Gateway.csproj
