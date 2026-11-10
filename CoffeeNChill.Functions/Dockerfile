@@ -15,6 +15,8 @@ WORKDIR /home/site/wwwroot
 ENV AzureFunctionsJobHost__Logging__Console__IsEnabled=true \
     FUNCTIONS_WORKER_RUNTIME=dotnet-isolated
 
+ENV ASPNETCORE_URLS=http://+:${PORT:-80}
+
 COPY --from=build /home/site/wwwroot .
 
 EXPOSE 80

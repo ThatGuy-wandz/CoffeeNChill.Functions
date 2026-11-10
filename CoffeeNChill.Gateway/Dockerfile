@@ -12,4 +12,5 @@ WORKDIR /app
 COPY --from=build /app/publish .
 # .NET images listen on 8080 by default; map it with  -p 5000:8080
 EXPOSE 8080
+ENV ASPNETCORE_URLS=http://+:${PORT:-8080}
 ENTRYPOINT ["dotnet", "CoffeeNChill.Gateway.dll"]
