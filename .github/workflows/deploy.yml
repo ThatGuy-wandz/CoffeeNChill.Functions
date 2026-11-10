@@ -2,7 +2,7 @@ name: Build, push and deploy
 
 on:
   push:
-    branches: [ master, main ]
+    branches: [ master, main ]  
   workflow_dispatch:
 
 env:
@@ -22,8 +22,11 @@ jobs:
         with:
           dotnet-version: 10.0.x
 
-      - name: Restore dependencies
-        run: dotnet restore
+      - name: Restore Gateway
+        run: dotnet restore CoffeeNChill.Gateway/CoffeeNChill.Gateway.csproj
+
+      - name: Restore Functions
+        run: dotnet restore CoffeeNChill.Functions/CoffeeNChill.Functions.csproj
 
       - name: Build and test
         run: |
@@ -79,4 +82,4 @@ jobs:
             sed -i "s|coffeenchill-gateway:.*|coffeenchill-gateway:${{ env.VERSION }}|" docker-compose.yml
             sed -i "s|coffeenchill-functions:.*|coffeenchill-functions:${{ env.VERSION }}|" docker-compose.yml
             docker compose pull
-            docker compose up -d
+            docker compose up -d       
