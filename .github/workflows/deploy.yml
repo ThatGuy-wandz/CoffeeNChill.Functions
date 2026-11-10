@@ -23,9 +23,8 @@ jobs:
         with:
           dotnet-version: 10.0.x
 
-                - name: Show .NET info
+      - name: Show .NET info
         run: dotnet --info
-     
 
       - name: Restore Gateway
         run: dotnet restore CoffeeNChill.Gateway/CoffeeNChill.Gateway.csproj
@@ -88,4 +87,4 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Placeholder for VPS deployment
-        run: echo "Skipping VPS deployment for now. Will add SSH steps later."
+        run: echo "Skipping VPS deployment for now. Will add SSH steps later." 
