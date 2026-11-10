@@ -162,7 +162,7 @@ Test 9: Anonymous access.GET /api/menu with no token. Expected: 200 OK.
 
 **Live URL:** http://172.209.216.242:5000/swagger
 **Host:** Azure VM (Ubuntu 24.04 LTS), Docker Engine and Docker Compose
-**Video walkthrough:** [paste your unlisted YouTube link here]
+**Video walkthrough:**https://youtu.be/vcO4DU6F5ko?si=K5sAtkE08LZJ0HCc
 
  Architecture
 ```mermaid
