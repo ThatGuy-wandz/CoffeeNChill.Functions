@@ -7,10 +7,10 @@ using CoffeeNChill.Gateway.Mapping;
 
 namespace CoffeeNChill.Gateway.Services;
 
-/// <summary>
+
 /// Moves an order forward (Received, Preparing, Ready, Collected) by updating its row in the
 /// Orders Azure Table directly. Backs PUT /api/orders/status.
-/// </summary>
+
 public class OrderStatusService : IOrderStatusService
 {
     private const string OrdersTableName = "Orders";

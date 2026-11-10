@@ -8,7 +8,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace CoffeeNChill.Gateway.Controllers;
 
-/// <summary>Registration, login (JWT) and the logged-in user's profile, kept in the Users Azure Table.</summary>
+/// Registration, login (JWT) and the logged-in user's profile, kept in the Users Azure Table.
 [ApiController]
 [Route("api/auth")]
 [Produces("application/json")]
@@ -24,16 +24,14 @@ public class AuthController : ControllerBase
         _tokens = tokens;
     }
 
-    /// <summary>Create a new account.</summary>
-    /// <remarks>
+    /// Create a new account.
     /// Public: no login needed. The password is stored only as a BCrypt hash.
     /// Every new account gets the Public role; roles cannot be chosen at registration.
-    /// </remarks>
-    /// <param name="request">Username, email and password.</param>
-    /// <param name="ct">Cancellation token.</param>
-    /// <response code="201">The account was created.</response>
-    /// <response code="400">A field is missing or invalid.</response>
-    /// <response code="409">That username is already taken.</response>
+    /// <param name="request">Username, email and password.
+    /// <param name="ct">Cancellation token.
+    /// <response code="201">The account was created.
+    /// <response code="400">A field is missing or invalid.
+    /// <response code="409">That username is already taken.
     [AllowAnonymous]
     [HttpPost("register")]
     [ProducesResponseType(typeof(RegisterResponse), StatusCodes.Status201Created)]
@@ -56,17 +54,15 @@ public class AuthController : ControllerBase
         return StatusCode(StatusCodes.Status201Created, response);
     }
 
-    /// <summary>Log in and receive a JWT.</summary>
-    /// <remarks>
+    /// Log in and receive a JWT.
     /// Public: no login needed. Send the returned token on later requests as
     /// <c>Authorization: Bearer {token}</c>. The same error is returned for an unknown
     /// username and a wrong password, so attackers cannot tell which usernames exist.
-    /// </remarks>
-    /// <param name="request">Username and password.</param>
-    /// <param name="ct">Cancellation token.</param>
-    /// <response code="200">A signed JWT with an expiry time and the user's role.</response>
-    /// <response code="400">A field is missing.</response>
-    /// <response code="401">The username or password is wrong.</response>
+    /// <param name="request">Username and password.
+    /// <param name="ct">Cancellation token.
+    /// <response code="200">A signed JWT with an expiry time and the user's role.
+    /// <response code="400">A field is missing.
+    /// <response code="401">The username or password is wrong.
     [AllowAnonymous]
     [HttpPost("login")]
     [ProducesResponseType(typeof(AuthResponse), StatusCodes.Status200OK)]
@@ -92,10 +88,10 @@ public class AuthController : ControllerBase
         });
     }
 
-    /// <summary>Show who the token belongs to.</summary>
-    /// <remarks>Any logged-in user (Public, Staff or Admin). Useful for checking a token works.</remarks>
-    /// <response code="200">The username, email and role from the token.</response>
-    /// <response code="401">No token, or the token is invalid or expired.</response>
+    /// Show who the token belongs to.
+    /// Any logged-in user (Public, Staff or Admin). Useful for checking a token works.
+    /// <response code="200">The username, email and role from the token.
+    /// <response code="401">No token, or the token is invalid or expired.
     [Authorize]
     [HttpGet("me")]
     [ProducesResponseType(typeof(UserProfileResponse), StatusCodes.Status200OK)]

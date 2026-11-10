@@ -1,9 +1,9 @@
 namespace CoffeeNChill.Gateway.Services;
 
-/// <summary>
+
 /// Everything the gateway asks of the Azure Functions app. Controllers depend on this
 /// interface, not on HttpClient, so they stay thin and the routing detail lives in one class.
-/// </summary>
+
 public interface IFunctionsApiClient
 {
     // Menu (Azure Table)

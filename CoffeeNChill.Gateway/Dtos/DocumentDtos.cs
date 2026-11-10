@@ -2,37 +2,37 @@ using System.ComponentModel.DataAnnotations;
 
 namespace CoffeeNChill.Gateway.Dtos;
 
-/// <summary>A staff document stored in the staff-docs file share.</summary>
+/// A staff document stored in the staff-docs file share.
 public class StaffDocumentResponse
 {
-    /// <example>cleaning-manual.pdf</example>
+    /// <example>cleaning-manual.pdf
     public string FileName { get; set; } = string.Empty;
 
-    /// <summary>Size in bytes.</summary>
-    /// <example>20480</example>
+    /// Size in bytes.
+    /// <example>20480
     public long SizeBytes { get; set; }
 
-    /// <summary>Size in kilobytes, rounded to 1 decimal.</summary>
-    /// <example>20.0</example>
+    /// Size in kilobytes, rounded to 1 decimal.
+    /// <example>20.0
     public double SizeKilobytes { get; set; }
 
     public DateTimeOffset? LastModified { get; set; }
 }
 
-/// <summary>Confirmation that a document was uploaded.</summary>
+/// Confirmation that a document was uploaded.
 public class DocumentUploadResponse
 {
-    /// <example>cleaning-manual.pdf</example>
+    /// <example>cleaning-manual.pdf
     public string FileName { get; set; } = string.Empty;
 
-    /// <example>20480</example>
+    /// <example>20480
     public long SizeBytes { get; set; }
 }
 
-/// <summary>Form body for uploading a staff document (multipart/form-data).</summary>
+/// Form body for uploading a staff document (multipart/form-data).
 public class UploadDocumentRequest
 {
-    /// <summary>The file to upload. PDF, Word, JPEG, PNG or plain text, up to 50 MB.</summary>
+    /// The file to upload. PDF, Word, JPEG, PNG or plain text, up to 50 MB.
     [Required]
     public IFormFile File { get; set; } = default!;
 }

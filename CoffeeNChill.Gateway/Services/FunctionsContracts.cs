@@ -82,11 +82,11 @@ public class FnUploadResult
     public long SizeBytes { get; set; }
 }
 
-/// <summary>The { "error": "..." } body every Function returns when something is wrong.</summary>
+/// The { "error": "..." } body every Function returns when something is wrong.
 public class FnError
 {
     public string? Error { get; set; }
 }
 
-/// <summary>A file streamed back from the Functions app.</summary>
+/// A file streamed back from the Functions app.
 public record FnDownload(Stream Content, string ContentType, string FileName);

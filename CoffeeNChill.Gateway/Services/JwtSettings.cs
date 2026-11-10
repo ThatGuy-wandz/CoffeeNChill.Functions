@@ -1,6 +1,6 @@
 namespace CoffeeNChill.Gateway.Services;
 
-/// <summary>Bound from the "Jwt" section of configuration. The Key comes from a secret, never from Git.</summary>
+/// Bound from the "Jwt" section of configuration. The Key comes from a secret, never from Git.
 public class JwtSettings
 {
     public const string SectionName = "Jwt";

@@ -4,11 +4,11 @@ using CoffeeNChill.Gateway.Services;
 
 namespace CoffeeNChill.Gateway.Mapping;
 
-/// <summary>
+
 /// All DTO mapping lives here (one place, no logic in controllers).
 ///   client DTO  --ToPayload()-->  Functions contract   (going in)
 ///   Functions contract / table row  --ToResponse()-->  client DTO   (coming out)
-/// </summary>
+
 public static class GatewayMapper
 {
     // ---------- Menu ----------

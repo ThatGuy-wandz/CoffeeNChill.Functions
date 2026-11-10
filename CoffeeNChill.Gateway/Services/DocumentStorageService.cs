@@ -4,7 +4,7 @@ using CoffeeNChill.Gateway.Exceptions;
 
 namespace CoffeeNChill.Gateway.Services;
 
-/// <summary>Deletes staff documents from the staff-docs container. Backs DELETE /api/documents/{fileName}.</summary>
+/// Deletes staff documents from the staff-docs container. Backs DELETE /api/documents/{fileName}.
 public class DocumentStorageService : IDocumentStorageService
 {
     private const string ContainerName = "staff-docs";

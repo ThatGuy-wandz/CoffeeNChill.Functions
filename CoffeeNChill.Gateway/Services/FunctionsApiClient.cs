@@ -6,10 +6,10 @@ using CoffeeNChill.Gateway.Exceptions;
 
 namespace CoffeeNChill.Gateway.Services;
 
-/// <summary>
+
 /// Forwards requests to the Azure Functions app and turns its answers into contracts.
 /// The base address comes from configuration (FunctionsApi:BaseUrl), set in Program.cs.
-/// </summary>
+
 public class FunctionsApiClient : IFunctionsApiClient
 {
     // The Functions app writes camelCase JSON; "Web" defaults read and write that.

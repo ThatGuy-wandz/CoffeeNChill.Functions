@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace CoffeeNChill.Gateway.Controllers;
 
-/// <summary>Menu items stored in the MenuItems Azure Table (routed through the Functions app).</summary>
+/// Menu items stored in the MenuItems Azure Table (routed through the Functions app).
 [ApiController]
 [Route("api/menu")]
 [Produces("application/json")]
@@ -22,9 +22,9 @@ public class MenuController : ControllerBase
         _functions = functions;
     }
 
-    /// <summary>Get the whole menu.</summary>
-    /// <remarks>Public: students can view the menu without logging in.</remarks>
-    /// <response code="200">All menu items (an empty list if the menu is empty).</response>
+    /// Get the whole menu.
+    /// Public: students can view the menu without logging in.
+    /// <response code="200">All menu items (an empty list if the menu is empty).
     [AllowAnonymous]
     [HttpGet]
     [ProducesResponseType(typeof(List<MenuItemResponse>), StatusCodes.Status200OK)]
@@ -34,11 +34,11 @@ public class MenuController : ControllerBase
         return Ok(items.Select(item => item.ToResponse()).ToList());
     }
 
-    /// <summary>Get the menu items in one category.</summary>
-    /// <remarks>Public: students can view the menu without logging in.</remarks>
-    /// <param name="category">Category name, for example "Hot Drinks".</param>
-    /// <response code="200">The items in that category.</response>
-    /// <response code="404">No items exist in that category.</response>
+    /// Get the menu items in one category.
+    /// <remarks>Public: students can view the menu without logging in.
+    /// <param name="category">Category name, for example "Hot Drinks".
+    /// <response code="200">The items in that category.
+    /// <response code="404">No items exist in that category.
     [AllowAnonymous]
     [HttpGet("category/{category}")]
     [ProducesResponseType(typeof(List<MenuItemResponse>), StatusCodes.Status200OK)]
@@ -49,14 +49,14 @@ public class MenuController : ControllerBase
         return Ok(items.Select(item => item.ToResponse()).ToList());
     }
 
-    /// <summary>Add a new item to the menu.</summary>
-    /// <remarks>Staff only (Admin or Staff role).</remarks>
-    /// <param name="request">The item to add.</param>
-    /// <response code="201">The item was created.</response>
-    /// <response code="400">The body is missing a required field or has an invalid value.</response>
-    /// <response code="401">No token, or the token is invalid or expired.</response>
-    /// <response code="403">The user's role is not allowed to do this.</response>
-    /// <response code="409">An item with that SKU already exists in the category.</response>
+    /// Add a new item to the menu.
+    /// Staff only (Admin or Staff role).
+    /// <param name="request">The item to add.
+    /// <response code="201">The item was created.
+    /// <response code="400">The body is missing a required field or has an invalid value.
+    /// <response code="401">No token, or the token is invalid or expired.
+    /// <response code="403">The user's role is not allowed to do this.
+    /// <response code="409">An item with that SKU already exists in the category.
     [Authorize(Roles = "Admin,Staff")]
     [HttpPost]
     [ProducesResponseType(typeof(MenuItemResponse), StatusCodes.Status201Created)]
@@ -71,16 +71,16 @@ public class MenuController : ControllerBase
         return CreatedAtAction(nameof(GetByCategory), new { category = created.Category }, created);
     }
 
-    /// <summary>Change the price and/or availability of an item.</summary>
-    /// <remarks>Staff only (Admin or Staff role).</remarks>
-    /// <param name="category">Category of the item.</param>
-    /// <param name="id">SKU of the item.</param>
-    /// <param name="request">The new price and/or availability.</param>
-    /// <response code="200">The updated item.</response>
-    /// <response code="400">Neither field was supplied, or a value is invalid.</response>
-    /// <response code="401">No token, or the token is invalid or expired.</response>
-    /// <response code="403">The user's role is not allowed to do this.</response>
-    /// <response code="404">The item does not exist.</response>
+    /// Change the price and/or availability of an item.
+    /// Staff only (Admin or Staff role).
+    /// <param name="category">Category of the item.
+    /// <param name="id">SKU of the item.
+    /// <param name="request">The new price and/or availability.
+    /// <response code="200">The updated item.
+    /// <response code="400">Neither field was supplied, or a value is invalid.
+    /// <response code="401">No token, or the token is invalid or expired.
+    /// <response code="403">The user's role is not allowed to do this.
+    /// <response code="404">The item does not exist.
     [Authorize(Roles = "Admin,Staff")]
     [HttpPut("{category}/{id}")]
     [ProducesResponseType(typeof(MenuItemResponse), StatusCodes.Status200OK)]
@@ -101,14 +101,14 @@ public class MenuController : ControllerBase
         return Ok(updated.ToResponse());
     }
 
-    /// <summary>Remove an item from the menu.</summary>
-    /// <remarks>Staff only (Admin or Staff role).</remarks>
-    /// <param name="category">Category of the item.</param>
-    /// <param name="id">SKU of the item.</param>
-    /// <response code="204">The item was deleted.</response>
-    /// <response code="401">No token, or the token is invalid or expired.</response>
-    /// <response code="403">The user's role is not allowed to do this.</response>
-    /// <response code="404">The item does not exist.</response>
+    /// Remove an item from the menu.
+    /// Staff only (Admin or Staff role).
+    /// <param name="category">Category of the item.
+    /// <param name="id">SKU of the item.
+    /// <response code="204">The item was deleted.
+    /// <response code="401">No token, or the token is invalid or expired.
+    /// <response code="403">The user's role is not allowed to do this.
+    /// <response code="404">The item does not exist.
     [Authorize(Roles = "Admin,Staff")]
     [HttpDelete("{category}/{id}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]

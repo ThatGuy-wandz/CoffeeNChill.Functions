@@ -2,71 +2,71 @@ using System.ComponentModel.DataAnnotations;
 
 namespace CoffeeNChill.Gateway.Dtos;
 
-/// <summary>Body for adding a new item to the menu.</summary>
+/// Body for adding a new item to the menu.
 public class CreateMenuItemRequest
 {
-    /// <summary>Menu category (this becomes the table PartitionKey).</summary>
-    /// <example>Hot Drinks</example>
+    /// Menu category (this becomes the table PartitionKey).
+    /// <example>Hot Drinks
     [Required, StringLength(50)]
     public string Category { get; set; } = string.Empty;
 
-    /// <summary>Unique item code inside the category (this becomes the table RowKey).</summary>
-    /// <example>COF-001</example>
+    /// Unique item code inside the category (this becomes the table RowKey).
+    /// <example>COF-001
     [Required, StringLength(20)]
     public string Sku { get; set; } = string.Empty;
 
-    /// <summary>Item name shown to students.</summary>
-    /// <example>Espresso</example>
+    /// Item name shown to students.
+    /// <example>Espresso
     [Required, StringLength(100)]
     public string Name { get; set; } = string.Empty;
 
-    /// <summary>Short description (optional).</summary>
+    /// Short description (optional).
     /// <example>Double shot of rich espresso</example>
     [StringLength(250)]
     public string? Description { get; set; }
 
-    /// <summary>Price in rand. Must be between 0 and 10000.</summary>
-    /// <example>28.50</example>
+    /// Price in rand. Must be between 0 and 10000.
+    /// <example>28.50
     [Range(0.0, 10000.0)]
     public decimal Price { get; set; }
 
-    /// <summary>Whether the item can currently be ordered.</summary>
-    /// <example>true</example>
+    /// Whether the item can currently be ordered.
+    /// <example>true
     public bool IsAvailable { get; set; } = true;
 }
 
-/// <summary>Body for changing an existing item. Send one field or both.</summary>
+/// Body for changing an existing item. Send one field or both.
 public class UpdateMenuItemRequest
 {
-    /// <summary>New price (optional).</summary>
-    /// <example>32.00</example>
+    /// New price (optional).
+    /// <example>32.00
     [Range(0.0, 10000.0)]
     public decimal? Price { get; set; }
 
-    /// <summary>New availability (optional).</summary>
-    /// <example>false</example>
+    /// New availability (optional).
+    /// <example>false
     public bool? IsAvailable { get; set; }
 }
 
-/// <summary>A menu item as returned to clients.</summary>
+/// A menu item as returned to clients.
 public class MenuItemResponse
 {
-    /// <example>Hot Drinks</example>
+    /// <example>Hot Drinks
     public string Category { get; set; } = string.Empty;
 
-    /// <example>COF-001</example>
+    /// <example>COF-001
     public string Sku { get; set; } = string.Empty;
 
-    /// <example>Espresso</example>
+    /// <example>Espresso
     public string Name { get; set; } = string.Empty;
 
-    /// <example>Double shot of rich espresso</example>
+    /// <example>Double shot of rich espresso
     public string Description { get; set; } = string.Empty;
 
-    /// <summary>Price in rand, rounded to 2 decimals.</summary>
-    /// <example>28.50</example>
+    /// <summary>Price in rand, rounded to 2 decimals
+    /// <example>28.50
     public decimal Price { get; set; }
 
-    /// <example>true</example>
+    /// <example>true
     public bool IsAvailable { get; set; }
 }

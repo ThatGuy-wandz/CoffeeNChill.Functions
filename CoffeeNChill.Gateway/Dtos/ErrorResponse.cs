@@ -1,27 +1,27 @@
 namespace CoffeeNChill.Gateway.Dtos;
 
-/// <summary>The one error format returned by every gateway endpoint.</summary>
+/// The one error format returned by every gateway endpoint.
 public class ErrorResponse
 {
-    /// <summary>HTTP status code.</summary>
-    /// <example>404</example>
+    /// HTTP status code.
+    /// <example>404
     public int StatusCode { get; set; }
 
-    /// <summary>Short name of the status code.</summary>
-    /// <example>Not Found</example>
+    /// Short name of the status code.
+    /// <example>Not Found
     public string Error { get; set; } = string.Empty;
 
-    /// <summary>What went wrong, in plain English.</summary>
-    /// <example>Order 'ORD-1' was not found.</example>
+    /// What went wrong, in plain English.
+    /// Order 'ORD-1' was not found.
     public string Message { get; set; } = string.Empty;
 
-    /// <summary>Field-by-field validation problems (only present for 400 validation errors).</summary>
+    /// Field-by-field validation problems (only present for 400 validation errors).
     public Dictionary<string, string[]>? Details { get; set; }
 
-    /// <summary>Id that lets you find this request in the gateway logs.</summary>
-    /// <example>0HN7A2B3C4D5E:00000001</example>
+    /// Id that lets you find this request in the gateway logs.
+    /// <example>0HN7A2B3C4D5E:00000001
     public string TraceId { get; set; } = string.Empty;
 
-    /// <summary>When the error happened (UTC).</summary>
+    /// When the error happened (UTC).
     public DateTimeOffset Timestamp { get; set; }
 }

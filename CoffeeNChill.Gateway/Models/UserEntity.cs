@@ -3,7 +3,7 @@ using Azure.Data.Tables;
 
 namespace CoffeeNChill.Gateway.Models;
 
-/// <summary>The three roles used for role-based access control.</summary>
+/// The three roles used for role-based access control.
 public static class Roles
 {
     public const string Public = "Public";
@@ -11,11 +11,11 @@ public static class Roles
     public const string Admin = "Admin";
 }
 
-/// <summary>A user profile stored in the Users Azure Table.</summary>
-/// <remarks>
+/// A user profile stored in the Users Azure Table.
+
 /// PartitionKey is always "Users". RowKey is the lower-case username, which guarantees
 /// usernames are unique. Only the BCrypt hash of the password is stored, never the password.
-/// </remarks>
+
 public class UserEntity : ITableEntity
 {
     public const string Partition = "Users";
