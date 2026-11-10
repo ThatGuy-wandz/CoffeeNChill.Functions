@@ -226,3 +226,4 @@ The pipeline connected to the remote Ubuntu VPS using the secure GitHub Secrets 
 Steps 1-4 have been successfully included in the workflow file. The VPS deployment (step 5) has been set up, however I was unable to successfully run it. This was due to not having any Azure subscriptions to provision the VPS. 
 
 # YouTuebe Link
+ https://youtu.be/vcO4DU6F5ko?si=K5sAtkE08LZJ0HCc
