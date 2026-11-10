@@ -1,4 +1,4 @@
- services:
+services:
   azurite:
     image: modestsnake/coffeenchill-azurite:v1.0
     container_name: azurite
@@ -23,7 +23,7 @@
     restart: unless-stopped
 
   functions:
-    image: st10477821/coffeenchill-functions:v2.0
+    image: ${DOCKERHUB_USERNAME:-modestsnake}/coffeenchill-functions:${IMAGE_TAG:-latest}
     container_name: functions
     depends_on:
       azurite:
@@ -39,7 +39,7 @@
     restart: unless-stopped
 
   gateway:
-    image: st10477821/coffeenchill-gateway:v3.0
+    image: ${DOCKERHUB_USERNAME:-modestsnake}/coffeenchill-gateway:${IMAGE_TAG:-latest}
     container_name: gateway
     depends_on:
       azurite:
