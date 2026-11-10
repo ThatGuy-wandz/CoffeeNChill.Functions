@@ -27,7 +27,7 @@ jobs:
         run: dotnet --info
 
       - name: Restore Gateway
-        run: dotnet restore CoffeeNChill.Gateway/CoffeeNChill.Gateway.csproj
+        run: dotnet restore CoffeeNChill.Gateway/CoffeeNChill.Gateway.csproj --verbosity detailed
 
       - name: Restore Functions
         run: dotnet restore CoffeeNChill.Functions/CoffeeNChill.Functions.csproj
