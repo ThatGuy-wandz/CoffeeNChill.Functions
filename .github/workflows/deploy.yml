@@ -1,17 +1,18 @@
-name: Build, push and deploy
+name: CI/CD - Build, test, publish and deploy
 
 on:
   push:
-    branches: [ master, main ]  
+    branches: [main, master]
   workflow_dispatch:
 
 env:
-  GATEWAY_IMAGE: ${{ secrets.DOCKERHUB_USERNAME }}/coffeenchill-gateway
-  FUNCTIONS_IMAGE: ${{ secrets.DOCKERHUB_USERNAME }}/coffeenchill-functions
-  VERSION: v3.${{ github.run_number }}
+  VERSION: v1.${{ github.run_number }}
+  FUNCTIONS_IMAGE: coffeenchill-functions
+  GATEWAY_IMAGE: coffeenchill-gateway
 
 jobs:
-  build-test:
+  test:
+    name: Build and unit tests
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -28,20 +29,25 @@ jobs:
       - name: Restore Functions
         run: dotnet restore CoffeeNChill.Functions/CoffeeNChill.Functions.csproj
 
-      - name: Build and test
-        run: |
-          dotnet build CoffeeNChill.Gateway/CoffeeNChill.Gateway.csproj -c Release --no-restore
-          dotnet build CoffeeNChill.Functions/CoffeeNChill.Functions.csproj -c Release --no-restore
-          if [ -d "*Tests" ] || find . -name "*Tests.csproj" -print -quit | grep -q .; then
-            dotnet test "$(find . -name '*Tests.csproj' | head -n 1)" -c Release --no-build
-          fi
+      - name: Restore Tests
+        run: dotnet restore CoffeeNChill.Gateway.Tests/CoffeeNChill.Gateway.Tests.csproj
+
+      - name: Build Gateway
+        run: dotnet build CoffeeNChill.Gateway/CoffeeNChill.Gateway.csproj --configuration Release --no-restore
+
+      - name: Run unit tests
+        run: dotnet test CoffeeNChill.Gateway.Tests/CoffeeNChill.Gateway.Tests.csproj --configuration Release --no-restore --verbosity normal
 
   docker:
-    needs: build-test
+    name: Build and push Docker images
+    needs: test
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
 
       - name: Log in to Docker Hub
         uses: docker/login-action@v3
@@ -49,37 +55,38 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Build and push Gateway image
-        uses: docker/build-push-action@v6
-        with:
-          context: ./CoffeeNChill.Gateway
-          push: true
-          tags: |
-            ${{ env.GATEWAY_IMAGE }}:${{ env.VERSION }}
-            ${{ env.GATEWAY_IMAGE }}:latest
-
       - name: Build and push Functions image
         uses: docker/build-push-action@v6
         with:
           context: ./CoffeeNChill.Functions
+          file: ./CoffeeNChill.Functions/Dockerfile
           push: true
           tags: |
-            ${{ env.FUNCTIONS_IMAGE }}:${{ env.VERSION }}
-            ${{ env.FUNCTIONS_IMAGE }}:latest
+            ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.FUNCTIONS_IMAGE }}:${{ env.VERSION }}
+            ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.FUNCTIONS_IMAGE }}:latest
+          cache-from: type=gha,scope=functions
+          cache-to: type=gha,scope=functions,mode=max
+
+      - name: Build and push Gateway image
+        uses: docker/build-push-action@v6
+        with:
+          context: ./CoffeeNChill.Gateway
+          file: ./CoffeeNChill.Gateway/Dockerfile
+          push: true
+          tags: |
+            ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.GATEWAY_IMAGE }}:${{ env.VERSION }}
+            ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.GATEWAY_IMAGE }}:latest
+          cache-from: type=gha,scope=gateway
+          cache-to: type=gha,scope=gateway,mode=max
 
   deploy:
+    name: Deploy to Render
     needs: docker
     runs-on: ubuntu-latest
     steps:
-      - name: Deploy to VPS over SSH
-        uses: appleboy/ssh-action@v1.2.0
-        with:
-          host: ${{ secrets.VPS_HOST }}
-          username: ${{ secrets.VPS_USER }}
-          key: ${{ secrets.VPS_SSH_KEY }}
-          script: |
-            cd ~/coffeenchill
-            sed -i "s|coffeenchill-gateway:.*|coffeenchill-gateway:${{ env.VERSION }}|" docker-compose.yml
-            sed -i "s|coffeenchill-functions:.*|coffeenchill-functions:${{ env.VERSION }}|" docker-compose.yml
-            docker compose pull
-            docker compose up -d       
+      - name: Trigger Render deploy - Gateway
+        run: |
+          curl -fsS -X POST "${{ secrets.RENDER_DEPLOY_HOOK_GATEWAY }}"
+      - name: Trigger Render deploy - Functions
+        run: |
+          curl -fsS -X POST "${{ secrets.RENDER_DEPLOY_HOOK_FUNCTIONS }}"
