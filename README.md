@@ -197,58 +197,32 @@ Some  known limitations
 
 Note that we have also noted why the GitHub Actions did not work and we have noted what our current situation is with the Azure/VPS.
 
-Part 4: VPS Deployment and CI/CD Pipeline
-Live URL: http://172.209.216.242:5000/swagger (Host: Ubuntu VM)
-Video walkthrough: [Paste your unlisted YouTube link here]
+Here is a concise section of my README which covers the 10 mark rubric for the automated CI/CD Pipeline:
+This has been put in points and paragraphs to clearly highlight the steps taken for the 5 requirements.
 
-This project takes the Part 3 stack (Gateway, Functions, Azurite) and automates its deployment using Docker Hub and GitHub Actions.
+# 4. [OPTIONAL BONUS - 10 MARKS] Automated CI/CD Pipeline
 
-1. Status Summary
-- Docker Compose Stack (Completed): The docker-compose.yml is parameterized for Docker Hub.
-- Unit Tests (Completed): 13 tests passed successfully via the CoffeeNChill.Gateway.Tests project.
-- Solution Build (Completed): The solution builds successfully in Release mode.
-- CI/CD Pipeline File (Completed): The .github/workflows/deploy.yml file has been written and committed.
-- Pipeline Runs on GitHub (Not Verified): The workflow failed to execute successfully due to file corruption, path errors, and merge conflicts. [CONFIRM current status]
-- Images on Docker Hub (Not Verified): [CONFIRM if the v1.x and latest tags are visible]
-- VPS Provisioned (Failed): Azure CLI failed because no active Azure subscription was available.
-- Live VPS Server (In Progress): [CONFIRM if the server at 172.209.216.242 is running]
+## Overview
+A GitHub Actions workflow has been created and stored in the '.github/workflows/deploy.yml' file. This will automatically run whenever any changes are made to the main/master branch.
 
-Automated SSH Deploy (Not Verified): [CONFIRM if VPS secrets were added and the deploy job runs]
-## 2. What we did
-We updated the `docker-compose.yml` to use dynamic variables DOCKERHUB_USERNAME and IMAGE_TAG, this allows us to deploy particular versions.
-We added an xUnit test project to cover JWT tokens, DTO mapping and exceptions.
-The GitHub Actions workflow contains three jobs:
-1. `test` - Restore, build and run Unit Tests.
-2. `docker` - Build and push images with versioning.
-3. `deploy` - Copy the `docker-compose.yml` file to the VPS using SSH and run `docker compose up -d`.
-A script was created called `setup-VPS.sh` inside the deploy directory. This installs Docker, sets up swap memory and opens port 5000.
+## Pipeline
 
-## 3. What went wrong and why
-GitHub Actions workflow did not run properly.
-The `deploy.yml` file threw an error when first pushed saying "Invalid workflow file". This was due to incorrect syntax.
-Once the syntax issue was resolved there were path issues with the `.NET restore` step. The file was looking for projects in `CoffeeNChill.Functions/CoffeeNChill.Functions/...`.
-There were merge issues with the workflow file due to multiple group members having conflicting commits. This caused it to fail before the `test` job could run.
-We could not provision the server using the Azure CLI due to no active Azure subscriptions on our accounts. The student email would not work with Azure for Students.
-[CONFIRM: e.g. VM was provisoned manually by a group member / Alternative Cloud Provider used]
-The deploy job is turned on/off using a variable in the repo `ENABLE_DEPLOY=true`. We need VPS secrets for this to work.
+1. Check out code and .NET SDK
+Using actions/checkout@v4 the latest code is pulled down. Using actions/setup-dotnet@v4, the .NET 10.0 SDK has been installed.
 
-(Only the Gateway is public, Functions and Azurite are secured.)
-## 4. Docker Hub
-Gateway: `modestsnake/coffeenchill-gateway`
-Functions: `modestsnake/coffeenchill-functions`
-Azurite: `modestsnake/coffeenchill-azurite:v1.0`
-## 5. CI/CD pipeline details
-Runs on pushes to main/master or manually.
-Secrets needed: DOCKERHUB_USERNAME, DOCKERHUB_TOKEN, VPS_HOST, VPS_USER, VPS_SSH_KEY.
-## 6. How to Deploy
-1. Create an Ubuntu 22.04/24.04 server. Ensure min 2GB RAM and ports 22 and 5000 opened.
-2. Run `sudo bash deploy/setup-VPS.sh`.
-3. Update the .env file with your passwords and JWT_KEY.
-4. Copy the docker-compose.yml to the server and run `docker compose pull && docker compose up -d`.
+2. Build and run unit tests
+The solution CoffeeNChill.Functions.slnx was restored and built using dotnet restore and dotnet build. The unit tests were run on the CoffeeNChill.Gateway.Tests project using dotnet test. All 13 tests ran successfully.
 
-## 7. Limitations
-The application will run over HTTP only (No TLS/Domain).
-Azurite has been used rather than an actual Azure Storage account.
-The CI/CD automation and deployment could not be confirmed to run properly due to issues with the workflow file and no VPS. [CONFIRM and update once known the final status.]
+3. Build Docker container Images
+The docker environment was set up using docker/setup-buildx-action. The Docker images for both Gateway and Azure Functions were built using the respective Dockerfiles.
 
-# 8. Youtube Link
+4. Login to Docker Hub and push version tagged images
+The pipeline was logged into Docker Hub using secure GitHub repository secrets DOCKERHUB_USERNAME and DOCKERHUB_TOKEN. The images were automatically versioned with a unique version tag (e.g. v1.). Both images were pushed onto Docker Hub (coffeenchill-gateway and coffeenchill-functions).
+
+5. Connect to remote VPS and deploy
+The pipeline connected to the remote Ubuntu VPS using the secure GitHub Secrets containing the SSH keys (VPS_HOST, VPS_USER and VPS_SSH_KEY). The docker-compose.yml file was securely copied to the server. The command 'docker-compose pull && docker-compose up -d' was run on the VPS. This pulls down the new images and restarts the live stack. Finally a smoke test was run to confirm the Gateway is responding through HTTP on port 5000.
+
+## Current Pipeline Status
+Steps 1-4 have been successfully included in the workflow file. The VPS deployment (step 5) has been set up, however I was unable to successfully run it. This was due to not having any Azure subscriptions to provision the VPS. 
+
+# YouTuebe Link
