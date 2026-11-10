@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
 
 env:
-  VERSION: v1.${{ github.run_number }}
+  IMAGE_VERSION: v1.${{ github.run_number }}
   FUNCTIONS_IMAGE: coffeenchill-functions
   GATEWAY_IMAGE: coffeenchill-gateway
 
@@ -21,7 +21,7 @@ jobs:
       - name: Set up .NET SDK 10
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: 10.0.1xx
+          dotnet-version: 10.0.x
 
       - name: Show .NET info
         run: dotnet --info
@@ -68,7 +68,7 @@ jobs:
           file: ./CoffeeNChill.Functions/Dockerfile
           push: true
           tags: |
-            ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.FUNCTIONS_IMAGE }}:${{ env.VERSION }}
+            ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.FUNCTIONS_IMAGE }}:${{ env.IMAGE_VERSION }}
             ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.FUNCTIONS_IMAGE }}:latest
 
       - name: Build and push Gateway image
@@ -78,7 +78,7 @@ jobs:
           file: ./CoffeeNChill.Gateway/Dockerfile
           push: true
           tags: |
-            ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.GATEWAY_IMAGE }}:${{ env.VERSION }}
+            ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.GATEWAY_IMAGE }}:${{ env.IMAGE_VERSION }}
             ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.GATEWAY_IMAGE }}:latest
 
   deploy:
