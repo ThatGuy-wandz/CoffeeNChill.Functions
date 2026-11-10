@@ -195,4 +195,60 @@ Some  known limitations
 - Azurite stands in for Azure Storage on the server.
 - Secrets are kept in a `.env` file that is not committed. Test credentials are shown in the video, not stored in the repo.
 
+Note that we have also noted why the GitHub Actions did not work and we have noted what our current situation is with the Azure/VPS.
 
+Part 4: VPS Deployment and CI/CD Pipeline
+Live URL: http://172.209.216.242:5000/swagger (Host: Ubuntu VM)
+Video walkthrough: [Paste your unlisted YouTube link here]
+
+This project takes the Part 3 stack (Gateway, Functions, Azurite) and automates its deployment using Docker Hub and GitHub Actions.
+
+1. Status Summary
+- Docker Compose Stack (Completed): The docker-compose.yml is parameterized for Docker Hub.
+- Unit Tests (Completed): 13 tests passed successfully via the CoffeeNChill.Gateway.Tests project.
+- Solution Build (Completed): The solution builds successfully in Release mode.
+- CI/CD Pipeline File (Completed): The .github/workflows/deploy.yml file has been written and committed.
+- Pipeline Runs on GitHub (Not Verified): The workflow failed to execute successfully due to file corruption, path errors, and merge conflicts. [CONFIRM current status]
+- Images on Docker Hub (Not Verified): [CONFIRM if the v1.x and latest tags are visible]
+- VPS Provisioned (Failed): Azure CLI failed because no active Azure subscription was available.
+- Live VPS Server (In Progress): [CONFIRM if the server at 172.209.216.242 is running]
+
+Automated SSH Deploy (Not Verified): [CONFIRM if VPS secrets were added and the deploy job runs]
+## 2. What we did
+We updated the `docker-compose.yml` to use dynamic variables DOCKERHUB_USERNAME and IMAGE_TAG, this allows us to deploy particular versions.
+We added an xUnit test project to cover JWT tokens, DTO mapping and exceptions.
+The GitHub Actions workflow contains three jobs:
+1. `test` - Restore, build and run Unit Tests.
+2. `docker` - Build and push images with versioning.
+3. `deploy` - Copy the `docker-compose.yml` file to the VPS using SSH and run `docker compose up -d`.
+A script was created called `setup-VPS.sh` inside the deploy directory. This installs Docker, sets up swap memory and opens port 5000.
+
+## 3. What went wrong and why
+GitHub Actions workflow did not run properly.
+The `deploy.yml` file threw an error when first pushed saying "Invalid workflow file". This was due to incorrect syntax.
+Once the syntax issue was resolved there were path issues with the `.NET restore` step. The file was looking for projects in `CoffeeNChill.Functions/CoffeeNChill.Functions/...`.
+There were merge issues with the workflow file due to multiple group members having conflicting commits. This caused it to fail before the `test` job could run.
+We could not provision the server using the Azure CLI due to no active Azure subscriptions on our accounts. The student email would not work with Azure for Students.
+[CONFIRM: e.g. VM was provisoned manually by a group member / Alternative Cloud Provider used]
+The deploy job is turned on/off using a variable in the repo `ENABLE_DEPLOY=true`. We need VPS secrets for this to work.
+
+(Only the Gateway is public, Functions and Azurite are secured.)
+## 4. Docker Hub
+Gateway: `modestsnake/coffeenchill-gateway`
+Functions: `modestsnake/coffeenchill-functions`
+Azurite: `modestsnake/coffeenchill-azurite:v1.0`
+## 5. CI/CD pipeline details
+Runs on pushes to main/master or manually.
+Secrets needed: DOCKERHUB_USERNAME, DOCKERHUB_TOKEN, VPS_HOST, VPS_USER, VPS_SSH_KEY.
+## 6. How to Deploy
+1. Create an Ubuntu 22.04/24.04 server. Ensure min 2GB RAM and ports 22 and 5000 opened.
+2. Run `sudo bash deploy/setup-VPS.sh`.
+3. Update the .env file with your passwords and JWT_KEY.
+4. Copy the docker-compose.yml to the server and run `docker compose pull && docker compose up -d`.
+
+## 7. Limitations
+The application will run over HTTP only (No TLS/Domain).
+Azurite has been used rather than an actual Azure Storage account.
+The CI/CD automation and deployment could not be confirmed to run properly due to issues with the workflow file and no VPS. [CONFIRM and update once known the final status.]
+
+# 8. Youtube Link
