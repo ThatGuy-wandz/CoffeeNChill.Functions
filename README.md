@@ -91,6 +91,72 @@ serialization
 Validation of order
 fields"
 
+POE P3
+JWT Authentication & User Profiles (Azure Tables)
+
+The Gateway (CoffeeNChill.Gateway) authenticates users with JSON Web Tokens (JWT). User profiles are stored in an Azure Table called Users. Passwords are never stored in plain text, only as BCrypt hashes.
+
+How it works
+
+1. A user registers with POST /api/auth/register. The Gateway hashes the password with BCrypt and saves the profile in the Users table (PartitionKey Users, RowKey = lowercase username).
+2. The user logs in with POST /api/auth/login. The Gateway checks the password and returns a signed JWT that is valid for 60 minutes.
+3. The client sends the token on every protected request as Authorization: Bearer &lt;token>.
+4. The Gateway validates the token's signature, issuer, audience and expiry, then checks the user's role.
+
+Token claims:sub (username), email, role, jti (unique token id).
+
+
+
+A request is rejected in one of two ways:
+• 401 Unauthorized: no token, or an invalid or expired token.
+• 403 Forbidden: a valid token whose role is not allowed.
+
+2. Run the Gateway.
+
+On startup the Gateway creates the Users table if needed and seeds the Admin and Staff accounts. Swagger is available at /swagger.
+
+3. Docker / VPS deployment. Use environment variables instead of user secrets. A double underscore replaces the colon
+
+
+Security design decisions
+
+-Passwords are hashed with BCrypt, which salts and slows down brute-force attacks. BCrypt only uses the first 72 bytes, so the maximum password length is 72 characters.
+-Self-registration always creates a Public user, so nobody can register themselves as Admin or Staff.
+-A fallback authorization policy requires a logged-in user on every endpoint. Public endpoints must opt out explicitly with [AllowAnonymous], so a forgotten attribute fails closed rather than open.
+-Login returns the same message ("Invalid username or password.") for a wrong username and a wrong password, so attackers cannot discover which usernames exist.
+-Token clock skew is set to zero, so tokens expire exactly on time.
+
+Testing
+
+Test with Swagger or Postman. Use your own base URL (for example https://localhost:PORT) and your own usernames and passwords.
+
+- Register a Public user.
+POST /api/auth/register
+json
+{ "username": "jane.smith", "email": "jane@example.com", "password": "Passw0rd123" }
+
+Expected: 201 Created.
+
+- Duplicate username. Send the same request again. Expected: 409 Conflict.
+
+- Weak password. Register with the password short. Expected: 400 Bad Request.
+
+- Wrong password. Log in with a wrong password. Expected: 401 Unauthorized.
+
+-Log in and get a token.
+POST /api/auth/login
+
+Expected: 200 OK with accessToken, tokenType: "Bearer" and expiresAtUtc.
+
+-Read the profile.GET /api/auth/me with the Bearer token. Expected: 200 OK showing the username, email and role Public. Without a token, expected: 401.
+
+- Public user blocked from staff actions.POST /api/menu with the Public user's token. Expected: 403 Forbidden.
+
+-Staff or Admin allowed. Log in as the seeded Staff or Admin account and repeat Test 7. Expected: a success response (200/201).
+
+Test 9: Anonymous access.GET /api/menu with no token. Expected: 200 OK.
+
+- No token on a protected route.GET /api/orders (the order list) with no token. Expected: 401 Unauthorized.
 
  Part 3: Live VPS Deployment
 
